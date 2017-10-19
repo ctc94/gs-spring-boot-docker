@@ -1,0 +1,10 @@
+<servers>
+  <server>
+    <id>docker-hub</id>
+    <username>ctc94</username>
+    <password>{tM9KAaRY/ygHvqi1dqV/cbhmN6RXXfomaommgP5zf9Q=}</password>
+    <configuration>
+      <email>mir948040@naver.com</email>
+    </configuration>
+  </server>
+</servers>

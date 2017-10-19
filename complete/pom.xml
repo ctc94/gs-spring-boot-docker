@@ -18,11 +18,11 @@
     </parent>
 
     <properties>
-        <docker.image.prefix>springio</docker.image.prefix>
+        <docker.image.prefix>ctc94</docker.image.prefix>
         <java.version>1.8</java.version>
     </properties>
 
-    <build>
+<build>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -35,7 +35,20 @@
                 <version>1.3.4</version>
                 <configuration>
                     <repository>${docker.image.prefix}/${project.artifactId}</repository>
-                </configuration>
+<serverId>docker-hub</serverId>
+      <registryUrl>https://hub.docker.com/r/</registryUrl>               
+<useConfigFile>true</useConfigFile> 
+</configuration>
+		<executions>
+			<execution>
+				<id>default</id>
+				<phase>install</phase>
+				<goals>
+					<goal>build</goal>
+					<goal>push</goal>
+				</goals>
+			</execution>
+		</executions>
             </plugin>
             <!-- end::plugin[] -->
             
