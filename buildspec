@@ -6,7 +6,7 @@ phases:
       - TAG="$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | head -c 8)"
   build:
     commands:
-      - cd complete/ && ./mvnw install
+      - ./mvnw install
   post_build:
     commands:
       #- docker build --tag "${REPOSITORY_URI}:${TAG}" .
