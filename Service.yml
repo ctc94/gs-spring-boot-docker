@@ -1,0 +1,102 @@
+Description: >
+  ServiceRole + TaskDefinition + Service
+
+Parameters: 
+
+  ElbPort: 
+    Type: Number
+    Default: 80
+    
+  ContainerPort: 
+    Type: Number
+    Default: 80
+    
+  DesiredCount:
+    Type: Number
+    Default: 1
+
+  TargetGroup:
+    Type: String
+
+  Cluster:
+    Type: String
+
+  Repository:
+    Type: String
+    
+  Tag:
+    Type: String
+    Default: latest
+  
+  ContainerName: 
+    Type: String
+    Default: springBootApp
+  
+    
+  S3TemplateUrl:
+    Type: String
+    Default: https://s3-ap-southeast-2.amazonaws.com/cfn-template-ctc94
+    Description: S3Template directory.
+    
+Resources:
+#  ServiceRole
+  ServiceRole: 
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub ${S3TemplateUrl}/basic/ServiceRole.yml
+      Parameters:
+        Service: ecs.amazonaws.com
+        ManagedPolicy: AmazonEC2ContainerServiceRole
+#  TaskDefinition
+  TaskDefinition: 
+    Type: "AWS::ECS::TaskDefinition"
+    Properties: 
+      ContainerDefinitions: 
+        - Name: !Ref ContainerName
+          MountPoints: 
+            - SourceVolume: "my-vol"
+              ContainerPath: "/var/www/my-vol"
+          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${Repository}:${Tag}
+          Cpu: "10"
+          PortMappings: 
+            - 
+              ContainerPort: !Ref ContainerPort
+              HostPort: !Ref ElbPort
+          EntryPoint: 
+            - "java"
+            - !Sub "-Dserver.port=${ContainerPort}"
+            - "-jar"
+            - "/app.jar"
+          Memory: "500"
+          Essential: "true"
+        - 
+          Name: "busybox"
+          Image: "busybox"
+          Cpu: "10"
+          EntryPoint: 
+            - "sh"
+            - "-c"
+          Memory: "100"
+          Command: 
+            - "/bin/sh -c \"while true; do /bin/date > /var/www/my-vol/date; sleep 1; done\""
+          Essential: "false"
+          VolumesFrom: 
+            - SourceContainer: !Ref ContainerName
+      Volumes: 
+        - 
+          Host: 
+            SourcePath: "/var/lib/docker/vfs/dir/"
+          Name: "my-vol"
+# Service
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: basicService
+      Cluster: !Ref Cluster
+      Role: !GetAtt ServiceRole.Outputs.Role
+      DesiredCount: !Ref DesiredCount
+      TaskDefinition: !Ref TaskDefinition
+      LoadBalancers:
+        - ContainerName: !Ref ContainerName
+          ContainerPort:  !Ref ContainerPort
+          TargetGroupArn: !Ref TargetGroup
